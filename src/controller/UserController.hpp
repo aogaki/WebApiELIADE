@@ -48,80 +48,6 @@ class UserController : public oatpp::web::server::api::ApiController
     return response;
   }
 
-  // ENDPOINT_INFO(createUser)
-  // {
-  //   info->summary = "Create new User";
-  //   info->addConsumes<Object<UserDto>>("application/json");
-  //   info->addResponse<Object<UserDto>>(Status::CODE_200, "application/json");
-  // }
-  // ENDPOINT("POST", "demo/api/users", createUser,
-  //          BODY_DTO(Object<UserDto>, userDto))
-  // {
-  //   return createDtoResponse(Status::CODE_200, m_database->createUser(userDto));
-  // }
-  //
-  // ENDPOINT_INFO(putUser)
-  // {
-  //   // general
-  //   info->summary = "Update User by username";
-  //   info->addConsumes<Object<UserDto>>("application/json");
-  //   info->addResponse<Object<UserDto>>(Status::CODE_200, "application/json");
-  //   info->addResponse<String>(Status::CODE_404, "text/plain");
-  //   // params specific
-  //   info->pathParams["username"].description = "username/login";
-  // }
-  // ENDPOINT("PUT", "demo/api/users/{username}", putUser, PATH(String, username),
-  //          BODY_DTO(Object<UserDto>, userDto))
-  // {
-  //   userDto->username = username;
-  //   return createDtoResponse(Status::CODE_200, m_database->updateUser(userDto));
-  // }
-  //
-  // ENDPOINT_INFO(getUser)
-  // {
-  //   // general
-  //   info->summary = "Get one User by username";
-  //   info->addResponse<Object<UserDto>>(Status::CODE_200, "application/json");
-  //   info->addResponse<String>(Status::CODE_404, "text/plain");
-  //   // params specific
-  //   info->pathParams["username"].description = "username/login";
-  // }
-  // ENDPOINT("GET", "demo/api/users/{username}", getUser, PATH(String, username))
-  // {
-  //   auto user = m_database->getUser(username);
-  //   OATPP_ASSERT_HTTP(user, Status::CODE_404, "User not found");
-  //   return createDtoResponse(Status::CODE_200, user);
-  // }
-  //
-  // ENDPOINT_INFO(getAllUsers)
-  // {
-  //   info->summary = "get all stored users";
-  //   info->addResponse<List<Object<UserDto>>>(Status::CODE_200,
-  //                                            "application/json");
-  // }
-  // ENDPOINT("GET", "demo/api/users", getAllUsers)
-  // {
-  //   return createDtoResponse(Status::CODE_200, m_database->getAllUsers());
-  // }
-  //
-  // ENDPOINT_INFO(deleteUser)
-  // {
-  //   // general
-  //   info->summary = "Delete User by username";
-  //   info->addResponse<String>(Status::CODE_200, "text/plain");
-  //   info->addResponse<String>(Status::CODE_404, "text/plain");
-  //   // params specific
-  //   info->pathParams["username"].description = "username/login";
-  // }
-  // ENDPOINT("DELETE", "demo/api/users/{username}", deleteUser,
-  //          PATH(String, username))
-  // {
-  //   bool success = m_database->deleteUser(username);
-  //   OATPP_ASSERT_HTTP(success, Status::CODE_500,
-  //                     "User not deleted. Perhaps no such User in the Database");
-  //   return createResponse(Status::CODE_200, "User successfully deleted");
-  // }
-
   ENDPOINT_INFO(getLastRun)
   {
     info->summary = "Get the current/last run information";
@@ -162,6 +88,115 @@ class UserController : public oatpp::web::server::api::ApiController
            BODY_DTO(Object<RunLogDto>, dto))
   {
     auto echo = m_database->PostStopTime(dto);
+    auto response = createDtoResponse(Status::CODE_200, echo);
+    return response;
+  }
+
+  ENDPOINT_INFO(getLastRunTest)
+  {
+    info->summary = "Get the current/last run information";
+    info->addResponse<Object<RunLogDto>>(Status::CODE_200, "application/json");
+  }
+  ADD_CORS(getLastRunTest)
+  ENDPOINT("GET", "/ELIADETest/GetLastRun", getLastRunTest)
+  {
+    auto dto = m_database->GetLastRun("TestRunLog");
+    auto response = createDtoResponse(Status::CODE_200, dto);
+    return response;
+  }
+
+  ENDPOINT_INFO(postStasrtTimeTest)
+  {
+    info->summary =
+        "Post start time with run number.  Creating document in the DB.";
+    info->addConsumes<Object<RunLogDto>>("application/json");
+    info->addResponse<Object<RunLogDto>>(Status::CODE_200, "application/json");
+  }
+  ADD_CORS(postStasrtTimeTest)
+  ENDPOINT("POST", "/ELIADETest/PostStartTime", postStasrtTimeTest,
+           BODY_DTO(Object<RunLogDto>, dto))
+  {
+    auto echo = m_database->PostStartTime(dto, "TestRunLog");
+    auto response = createDtoResponse(Status::CODE_200, echo);
+    return response;
+  }
+
+  ENDPOINT_INFO(postStopTimeTest)
+  {
+    info->summary = "Post stop time.  Creating or update document in the DB.";
+    info->addConsumes<Object<RunLogDto>>("application/json");
+    info->addResponse<Object<RunLogDto>>(Status::CODE_200, "application/json");
+  }
+  ADD_CORS(postStopTimeTest)
+  ENDPOINT("POST", "/ELIADETest/PostStopTime", postStopTimeTest,
+           BODY_DTO(Object<RunLogDto>, dto))
+  {
+    auto echo = m_database->PostStopTime(dto, "TestRunLog");
+    auto response = createDtoResponse(Status::CODE_200, echo);
+    return response;
+  }
+
+  ENDPOINT_INFO(getDigiPar)
+  {
+    info->summary = "Get the digitizer parameters";
+    info->addResponse<Object<ExpDto>>(Status::CODE_200, "application/json");
+  }
+  ADD_CORS(getDigiPar)
+  ENDPOINT("GET", "/ELIADE/GetDigiPar", getDigiPar)
+  {
+    auto dto = m_database->GetDigiPar();
+    auto response = createDtoResponse(Status::CODE_200, dto);
+    return response;
+  }
+
+  ENDPOINT_INFO(getLastRunServerTest)
+  {
+    info->summary = "Get the current/last run information";
+    info->addResponse<Object<RunLogDto>>(Status::CODE_200, "application/json");
+
+    info->queryParams.add<String>("expName").description = "Experiment name";
+    info->queryParams["expName"].required = false;
+  }
+  ADD_CORS(getLastRunServerTest)
+  ENDPOINT("GET", "/ServerTest/GetLastRun", getLastRunServerTest,
+           REQUEST(std::shared_ptr<IncomingRequest>, request))
+  {
+    auto expName = request->getQueryParameter("expName", "");
+    auto dto = m_database->GetLastRun(expName, "ServerRunLog");
+    auto response = createDtoResponse(Status::CODE_200, dto);
+    return response;
+  }
+
+  ENDPOINT_INFO(postStasrtTimeServerTest)
+  {
+    info->summary =
+        "Post start time with run number.  Creating document in the DB.";
+    info->addConsumes<Object<RunLogDto>>("application/json");
+    info->addResponse<Object<RunLogDto>>(Status::CODE_200, "application/json");
+
+    info->queryParams.add<String>("expName").description = "Experiment name";
+    info->queryParams["expName"].required = false;
+  }
+  ADD_CORS(postStasrtTimeServerTest)
+  ENDPOINT("POST", "/ServerTest/PostStartTime", postStasrtTimeServerTest,
+           BODY_DTO(Object<RunLogDto>, dto))
+  {
+    auto echo = m_database->PostStartTime(dto, "ServerRunLog");
+    auto response = createDtoResponse(Status::CODE_200, echo);
+    return response;
+  }
+
+  ENDPOINT_INFO(postStopTimeServerTest)
+  {
+    info->summary = "Post stop time.  Creating or update document in the DB.";
+    info->addConsumes<Object<RunLogDto>>("application/json");
+    info->addResponse<Object<RunLogDto>>(Status::CODE_200, "application/json");
+  }
+  ADD_CORS(postStopTimeServerTest)
+  ENDPOINT("POST", "/ServerTest/PostStopTime", postStopTimeServerTest,
+           BODY_DTO(Object<RunLogDto>, dto))
+  {
+    auto echo = m_database->PostStopTime(dto, "ServerRunLog");
     auto response = createDtoResponse(Status::CODE_200, echo);
     return response;
   }
