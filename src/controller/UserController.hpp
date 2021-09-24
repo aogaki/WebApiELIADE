@@ -2,6 +2,8 @@
 #ifndef example_oatpp_mongo_UserController_hpp
 #define example_oatpp_mongo_UserController_hpp
 
+#include <iostream>
+
 #include "db/Database.hpp"
 #include "dto/DTOs.hpp"
 #include "oatpp-swagger/Types.hpp"
@@ -48,15 +50,28 @@ class UserController : public oatpp::web::server::api::ApiController
     return response;
   }
 
-  ENDPOINT_INFO(getLastRun)
+  ENDPOINT_INFO(getDigiPar)
+  {
+    info->summary = "Get the digitizer parameters";
+    info->addResponse<Object<ExpDto>>(Status::CODE_200, "application/json");
+  }
+  ADD_CORS(getDigiPar)
+  ENDPOINT("GET", "/ELIADE/GetDigiPar", getDigiPar)
+  {
+    auto dto = m_database->GetDigiPar();
+    auto response = createDtoResponse(Status::CODE_200, dto);
+    return response;
+  }
+
+  ENDPOINT_INFO(getRun)
   {
     info->summary = "Get the current/last run information";
     info->addResponse<Object<RunLogDto>>(Status::CODE_200, "application/json");
   }
-  ADD_CORS(getLastRun)
-  ENDPOINT("GET", "/ELIADE/GetLastRun", getLastRun)
+  ADD_CORS(getRun)
+  ENDPOINT("GET", "/ELIADE/GetLastRun/{expName}", getRun, PATH(String, expName))
   {
-    auto dto = m_database->GetLastRun();
+    auto dto = m_database->GetLastRun(expName, "ServerRunLog");
     auto response = createDtoResponse(Status::CODE_200, dto);
     return response;
   }
@@ -72,7 +87,7 @@ class UserController : public oatpp::web::server::api::ApiController
   ENDPOINT("POST", "/ELIADE/PostStartTime", postStasrtTime,
            BODY_DTO(Object<RunLogDto>, dto))
   {
-    auto echo = m_database->PostStartTime(dto);
+    auto echo = m_database->PostNewRun(dto, "ServerRunLog");
     auto response = createDtoResponse(Status::CODE_200, echo);
     return response;
   }
@@ -87,117 +102,75 @@ class UserController : public oatpp::web::server::api::ApiController
   ENDPOINT("POST", "/ELIADE/PostStopTime", postStopTime,
            BODY_DTO(Object<RunLogDto>, dto))
   {
-    auto echo = m_database->PostStopTime(dto);
+    auto echo = m_database->PostUpdateRun(dto, "ServerRunLog");
     auto response = createDtoResponse(Status::CODE_200, echo);
     return response;
   }
 
-  ENDPOINT_INFO(getLastRunTest)
+  ENDPOINT_INFO(enableDump)
   {
-    info->summary = "Get the current/last run information";
-    info->addResponse<Object<RunLogDto>>(Status::CODE_200, "application/json");
-  }
-  ADD_CORS(getLastRunTest)
-  ENDPOINT("GET", "/ELIADETest/GetLastRun", getLastRunTest)
-  {
-    auto dto = m_database->GetLastRun("TestRunLog");
-    auto response = createDtoResponse(Status::CODE_200, dto);
-    return response;
-  }
-
-  ENDPOINT_INFO(postStasrtTimeTest)
-  {
-    info->summary =
-        "Post start time with run number.  Creating document in the DB.";
+    info->summary = "Force ASCII dump";
     info->addConsumes<Object<RunLogDto>>("application/json");
     info->addResponse<Object<RunLogDto>>(Status::CODE_200, "application/json");
   }
-  ADD_CORS(postStasrtTimeTest)
-  ENDPOINT("POST", "/ELIADETest/PostStartTime", postStasrtTimeTest,
+  ADD_CORS(enableDump)
+  ENDPOINT("POST", "/ELIADE/EnableDump", enableDump,
            BODY_DTO(Object<RunLogDto>, dto))
   {
-    auto echo = m_database->PostStartTime(dto, "TestRunLog");
+    auto echo = m_database->PostUpdateRun(dto, "ServerRunLog");
     auto response = createDtoResponse(Status::CODE_200, echo);
     return response;
   }
 
-  ENDPOINT_INFO(postStopTimeTest)
+  ENDPOINT_INFO(checkDump)
   {
-    info->summary = "Post stop time.  Creating or update document in the DB.";
-    info->addConsumes<Object<RunLogDto>>("application/json");
-    info->addResponse<Object<RunLogDto>>(Status::CODE_200, "application/json");
+    info->summary = "Check ASCII dump or not.  Disable dump after checking.";
+    info->addResponse<String>(Status::CODE_200, "text/plain");
   }
-  ADD_CORS(postStopTimeTest)
-  ENDPOINT("POST", "/ELIADETest/PostStopTime", postStopTimeTest,
-           BODY_DTO(Object<RunLogDto>, dto))
+  ADD_CORS(checkDump)
+  ENDPOINT("GET", "/ELIADE/CheckDump/{expName}", checkDump,
+           PATH(String, expName))
   {
-    auto echo = m_database->PostStopTime(dto, "TestRunLog");
-    auto response = createDtoResponse(Status::CODE_200, echo);
-    return response;
-  }
-
-  ENDPOINT_INFO(getDigiPar)
-  {
-    info->summary = "Get the digitizer parameters";
-    info->addResponse<Object<ExpDto>>(Status::CODE_200, "application/json");
-  }
-  ADD_CORS(getDigiPar)
-  ENDPOINT("GET", "/ELIADE/GetDigiPar", getDigiPar)
-  {
-    auto dto = m_database->GetDigiPar();
-    auto response = createDtoResponse(Status::CODE_200, dto);
-    return response;
-  }
-
-  ENDPOINT_INFO(getLastRunServerTest)
-  {
-    info->summary = "Get the current/last run information";
-    info->addResponse<Object<RunLogDto>>(Status::CODE_200, "application/json");
-
-    info->queryParams.add<String>("expName").description = "Experiment name";
-    info->queryParams["expName"].required = false;
-  }
-  ADD_CORS(getLastRunServerTest)
-  ENDPOINT("GET", "/ServerTest/GetLastRun", getLastRunServerTest,
-           REQUEST(std::shared_ptr<IncomingRequest>, request))
-  {
-    auto expName = request->getQueryParameter("expName", "");
     auto dto = m_database->GetLastRun(expName, "ServerRunLog");
+    // std::string message = std::to_string(dto->dump);
+    std::string message = "false";
+    if (dto->dump) {
+      message = "true";
+      dto->dump = false;
+      m_database->PostUpdateRun(dto, "ServerRunLog");
+    }
+
+    auto response = createResponse(Status::CODE_200, message.c_str());
+    return response;
+  }
+
+  ENDPOINT_INFO(postEveRate)
+  {
+    info->summary = "Post event rate";
+    info->addConsumes<Object<EveRateDto>>("application/json");
+    info->addResponse<String>(Status::CODE_200, "text/plain");
+  }
+  ADD_CORS(postEveRate)
+  ENDPOINT("POST", "/ELIADE/PostEveRate/{expName}", postEveRate,
+           BODY_DTO(Object<EveRateDto>, dto), PATH(String, expName))
+  {
+    dto->expName = expName;
+    auto state = m_database->PostEveRate(dto);
+    auto response = createResponse(Status::CODE_200, state.c_str());
+    return response;
+  }
+
+  ENDPOINT_INFO(getEveRate)
+  {
+    info->summary = "Post event rate";
+    info->addResponse<String>(Status::CODE_200, "application/json");
+  }
+  ADD_CORS(getEveRate)
+  ENDPOINT("GET", "/ELIADE/GetEveRate/{expName}", getEveRate,
+           PATH(String, expName))
+  {
+    auto dto = m_database->GetEveRate(expName->std_str());
     auto response = createDtoResponse(Status::CODE_200, dto);
-    return response;
-  }
-
-  ENDPOINT_INFO(postStasrtTimeServerTest)
-  {
-    info->summary =
-        "Post start time with run number.  Creating document in the DB.";
-    info->addConsumes<Object<RunLogDto>>("application/json");
-    info->addResponse<Object<RunLogDto>>(Status::CODE_200, "application/json");
-
-    info->queryParams.add<String>("expName").description = "Experiment name";
-    info->queryParams["expName"].required = false;
-  }
-  ADD_CORS(postStasrtTimeServerTest)
-  ENDPOINT("POST", "/ServerTest/PostStartTime", postStasrtTimeServerTest,
-           BODY_DTO(Object<RunLogDto>, dto))
-  {
-    auto echo = m_database->PostStartTime(dto, "ServerRunLog");
-    auto response = createDtoResponse(Status::CODE_200, echo);
-    return response;
-  }
-
-  ENDPOINT_INFO(postStopTimeServerTest)
-  {
-    info->summary = "Post stop time.  Creating or update document in the DB.";
-    info->addConsumes<Object<RunLogDto>>("application/json");
-    info->addResponse<Object<RunLogDto>>(Status::CODE_200, "application/json");
-  }
-  ADD_CORS(postStopTimeServerTest)
-  ENDPOINT("POST", "/ServerTest/PostStopTime", postStopTimeServerTest,
-           BODY_DTO(Object<RunLogDto>, dto))
-  {
-    auto echo = m_database->PostStopTime(dto, "ServerRunLog");
-    auto response = createDtoResponse(Status::CODE_200, echo);
     return response;
   }
 };

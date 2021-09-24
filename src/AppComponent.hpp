@@ -42,7 +42,7 @@ class AppComponent
       serverConnectionProvider)
   ([] {
     return oatpp::network::tcp::server::ConnectionProvider::createShared(
-        {"0.0.0.0", 8000, oatpp::network::Address::IP_4});
+        {"0.0.0.0", 1234, oatpp::network::Address::IP_4});
   }());
 
   /**
@@ -77,16 +77,7 @@ class AppComponent
   }());
 
   OATPP_CREATE_COMPONENT(std::shared_ptr<db::Database>, database)
-  ([this] {
-    oatpp::String connectionString = std::getenv("DEMO_MONGO_CONN_STR");
-    if (!connectionString) {
-      connectionString = m_cmdArgs.getNamedArgumentValue(
-          "--conn-str", "mongodb://daq:nim2camac@localhost/ELIADE");
-    }
-
-    mongocxx::uri uri(connectionString->std_str());
-    return std::make_shared<db::Database>(uri, "ELIADE", "all");
-  }());
+  ([this] { return std::make_shared<db::Database>(); }());
 };
 
 #endif /* example_oatpp_mongo_AppComponent_hpp */

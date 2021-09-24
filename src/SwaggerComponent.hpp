@@ -27,7 +27,7 @@ class SwaggerComponent
         .setContactName("Soiciro Aogaki")
         .setContactUrl("https://github.com/aogaki/WebApiELIADE")
 
-        .addServer("http://172.18.4.56:8000", "server on localhost");
+        .addServer("http://172.18.4.56:1234", "server on localhost");
 
     return builder.build();
   }());

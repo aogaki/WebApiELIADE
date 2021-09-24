@@ -12,8 +12,7 @@ add_library(${project_name}-lib
         src/AppComponent.hpp
         src/SwaggerComponent.hpp
         src/controller/UserController.hpp
-        src/dto/DTOs.hpp
-        src/db/Model.hpp)
+        src/dto/DTOs.hpp)
 
 ###################################################################
 # Find mongocxx
