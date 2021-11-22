@@ -22,7 +22,7 @@ namespace db
 {
 Database::Database()
     : fEliadePool(std::make_shared<mongocxx::pool>(
-          mongocxx::uri("mongodb://172.18.4.56/ELIADE")))
+          mongocxx::uri("mongodb://127.0.0.1/ELIADE")))
 {
 }
 
