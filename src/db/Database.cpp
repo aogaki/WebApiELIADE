@@ -52,6 +52,34 @@ oatpp::Object<RunLogDto> Database::GetLastRun(
   return dto;
 }
 
+oatpp::List<oatpp::Object<RunLogDto>> Database::GetRunList(
+    oatpp::data::mapping::type::String expName, std::string collectionName)
+{
+  auto conn = fEliadePool->acquire();
+  auto collection = (*conn)["ELIADE"][collectionName];
+
+  auto sortOpt = mongocxx::options::find{};
+  // sortOpt.limit(10);
+  auto order = bsoncxx::builder::stream::document{}
+               << "start" << -1 << bsoncxx::builder::stream::finalize;
+  sortOpt.sort(order.view());
+  auto key = bsoncxx::builder::stream::document{}
+             << "expName" << expName->std_str()
+             << bsoncxx::builder::stream::finalize;
+  auto cursor = collection.find({key}, sortOpt);
+
+  // auto dto = RunLogDto::createShared();
+  auto list = oatpp::List<oatpp::Object<RunLogDto>>::createShared();
+  for (auto &&doc : cursor) {
+    auto json = bsoncxx::to_json(doc);
+    oatpp::parser::json::mapping::ObjectMapper objMapper;
+    auto dto = objMapper.readFromString<oatpp::Object<RunLogDto>>(json.c_str());
+    list->push_back(dto);
+  }
+
+  return list;
+}
+
 oatpp::Object<RunLogDto> Database::PostNewRun(oatpp::Object<RunLogDto> dto,
                                               std::string collectionName)
 {
@@ -99,43 +127,6 @@ oatpp::Object<RunLogDto> Database::PostUpdateRun(oatpp::Object<RunLogDto> dto,
     auto result = collection.insert_one(buf.view());
     dto->id = result->inserted_id().get_oid().value.to_string().c_str();
     buf.clear();
-  }
-
-  return dto;
-}
-
-std::string Database::PostEveRate(oatpp::Object<EveRateDto> dto)
-{
-  oatpp::parser::json::mapping::ObjectMapper objMapper;
-  auto json = objMapper.writeToString(dto);
-  auto doc = bsoncxx::from_json(json->std_str());
-
-  auto conn = fEliadePool->acquire();
-  auto collection = (*conn)["ELIADE"]["EventRate"];
-  auto result = collection.insert_one(doc.view());
-
-  return "OK";
-}
-
-oatpp::Object<EveRateDto> Database::GetEveRate(std::string expName)
-{
-  auto conn = fEliadePool->acquire();
-  auto collection = (*conn)["ELIADE"]["EventRate"];
-
-  auto sortOpt = mongocxx::options::find{};
-  sortOpt.limit(1);
-  auto order = bsoncxx::builder::stream::document{}
-               << "start" << -1 << bsoncxx::builder::stream::finalize;
-  sortOpt.sort(order.view());
-  auto key = bsoncxx::builder::stream::document{}
-             << "expName" << expName << bsoncxx::builder::stream::finalize;
-  auto doc = collection.find_one({key}, sortOpt);
-
-  auto dto = EveRateDto::createShared();
-  if (doc) {
-    auto json = bsoncxx::to_json(doc->view());
-    oatpp::parser::json::mapping::ObjectMapper objMapper;
-    dto = objMapper.readFromString<oatpp::Object<EveRateDto>>(json.c_str());
   }
 
   return dto;

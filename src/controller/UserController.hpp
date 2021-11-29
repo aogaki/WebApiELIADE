@@ -76,6 +76,21 @@ class UserController : public oatpp::web::server::api::ApiController
     return response;
   }
 
+  ENDPOINT_INFO(getRunList)
+  {
+    info->summary = "Get the run information list";
+    info->addResponse<List<Object<RunLogDto>>>(Status::CODE_200,
+                                               "application/json");
+  }
+  ADD_CORS(getRunList)
+  ENDPOINT("GET", "/ELIADE/GetRunList/{expName}", getRunList,
+           PATH(String, expName))
+  {
+    auto dto = m_database->GetRunList(expName, "ServerRunLog");
+    auto response = createDtoResponse(Status::CODE_200, dto);
+    return response;
+  }
+
   ENDPOINT_INFO(postStasrtTime)
   {
     info->summary =
@@ -141,36 +156,6 @@ class UserController : public oatpp::web::server::api::ApiController
     }
 
     auto response = createResponse(Status::CODE_200, message.c_str());
-    return response;
-  }
-
-  ENDPOINT_INFO(postEveRate)
-  {
-    info->summary = "Post event rate";
-    info->addConsumes<Object<EveRateDto>>("application/json");
-    info->addResponse<String>(Status::CODE_200, "text/plain");
-  }
-  ADD_CORS(postEveRate)
-  ENDPOINT("POST", "/ELIADE/PostEveRate/{expName}", postEveRate,
-           BODY_DTO(Object<EveRateDto>, dto), PATH(String, expName))
-  {
-    dto->expName = expName;
-    auto state = m_database->PostEveRate(dto);
-    auto response = createResponse(Status::CODE_200, state.c_str());
-    return response;
-  }
-
-  ENDPOINT_INFO(getEveRate)
-  {
-    info->summary = "Post event rate";
-    info->addResponse<String>(Status::CODE_200, "application/json");
-  }
-  ADD_CORS(getEveRate)
-  ENDPOINT("GET", "/ELIADE/GetEveRate/{expName}", getEveRate,
-           PATH(String, expName))
-  {
-    auto dto = m_database->GetEveRate(expName->std_str());
-    auto response = createDtoResponse(Status::CODE_200, dto);
     return response;
   }
 };

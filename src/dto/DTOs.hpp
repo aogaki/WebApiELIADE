@@ -21,14 +21,6 @@ class RunLogDto : public oatpp::DTO
   DTO_FIELD(Boolean, dataWriting);
 };
 
-class EveRateDto : public oatpp::DTO
-{
-  DTO_INIT(EveRateDto, DTO)
-
-  DTO_FIELD(String, expName);
-  DTO_FIELD(List<List<Int32>>, eveRate);
-};
-
 class DigiParDto : public oatpp::DTO
 {
   DTO_INIT(DigiParDto, DTO)

@@ -23,13 +23,14 @@ class Database
   oatpp::Object<RunLogDto> GetLastRun(
       oatpp::data::mapping::type::String expName = "",
       std::string collectionName = "RunLog");
+  oatpp::List<oatpp::Object<RunLogDto>> GetRunList(
+      oatpp::data::mapping::type::String expName = "",
+      std::string collectionName = "RunLog");
+
   oatpp::Object<RunLogDto> PostNewRun(oatpp::Object<RunLogDto> dto,
                                       std::string collectionName = "RunLog");
   oatpp::Object<RunLogDto> PostUpdateRun(oatpp::Object<RunLogDto> dto,
                                          std::string collectionName = "RunLog");
-
-  std::string PostEveRate(oatpp::Object<EveRateDto> dto);
-  oatpp::Object<EveRateDto> GetEveRate(std::string expName);
 
   oatpp::Object<ExpDto> GetDigiPar();
 };
