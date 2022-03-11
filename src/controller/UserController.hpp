@@ -71,7 +71,7 @@ class UserController : public oatpp::web::server::api::ApiController
   ADD_CORS(getRun)
   ENDPOINT("GET", "/ELIADE/GetLastRun/{expName}", getRun, PATH(String, expName))
   {
-    auto dto = m_database->GetLastRun(expName, "ServerRunLog");
+    auto dto = m_database->GetRunList(expName, "ServerRunLog", 1);
     auto response = createDtoResponse(Status::CODE_200, dto);
     return response;
   }
@@ -86,7 +86,22 @@ class UserController : public oatpp::web::server::api::ApiController
   ENDPOINT("GET", "/ELIADE/GetRunList/{expName}", getRunList,
            PATH(String, expName))
   {
-    auto dto = m_database->GetRunList(expName, "ServerRunLog");
+    auto dto = m_database->GetRunList(expName, "ServerRunLog", 20);
+    auto response = createDtoResponse(Status::CODE_200, dto);
+    return response;
+  }
+
+  ENDPOINT_INFO(getAllRunList)
+  {
+    info->summary = "Get the run information list";
+    info->addResponse<List<Object<RunLogDto>>>(Status::CODE_200,
+                                               "application/json");
+  }
+  ADD_CORS(getAllRunList)
+  ENDPOINT("GET", "/ELIADE/GetAllRunList/{expName}", getAllRunList,
+           PATH(String, expName))
+  {
+    auto dto = m_database->GetRunList(expName, "ServerRunLog", 0);
     auto response = createDtoResponse(Status::CODE_200, dto);
     return response;
   }
@@ -146,13 +161,13 @@ class UserController : public oatpp::web::server::api::ApiController
   ENDPOINT("GET", "/ELIADE/CheckDump/{expName}", checkDump,
            PATH(String, expName))
   {
-    auto dto = m_database->GetLastRun(expName, "ServerRunLog");
+    auto dto = m_database->GetRunList(expName, "ServerRunLog");
     // std::string message = std::to_string(dto->dump);
     std::string message = "false";
-    if (dto->dump) {
+    if (dto[0]->dump) {
       message = "true";
-      dto->dump = false;
-      m_database->PostUpdateRun(dto, "ServerRunLog");
+      dto[0]->dump = false;
+      m_database->PostUpdateRun(dto[0], "ServerRunLog");
     }
 
     auto response = createResponse(Status::CODE_200, message.c_str());

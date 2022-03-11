@@ -20,12 +20,9 @@ class Database
  public:
   Database();
 
-  oatpp::Object<RunLogDto> GetLastRun(
-      oatpp::data::mapping::type::String expName = "",
-      std::string collectionName = "RunLog");
   oatpp::List<oatpp::Object<RunLogDto>> GetRunList(
       oatpp::data::mapping::type::String expName = "",
-      std::string collectionName = "RunLog");
+      std::string collectionName = "RunLog", int listSize = 1);
 
   oatpp::Object<RunLogDto> PostNewRun(oatpp::Object<RunLogDto> dto,
                                       std::string collectionName = "RunLog");

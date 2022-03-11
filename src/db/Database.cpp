@@ -26,40 +26,15 @@ Database::Database()
 {
 }
 
-oatpp::Object<RunLogDto> Database::GetLastRun(
-    oatpp::data::mapping::type::String expName, std::string collectionName)
-{
-  auto conn = fEliadePool->acquire();
-  auto collection = (*conn)["ELIADE"][collectionName];
-
-  auto sortOpt = mongocxx::options::find{};
-  sortOpt.limit(1);
-  auto order = bsoncxx::builder::stream::document{}
-               << "start" << -1 << bsoncxx::builder::stream::finalize;
-  sortOpt.sort(order.view());
-  auto key = bsoncxx::builder::stream::document{}
-             << "expName" << expName->std_str()
-             << bsoncxx::builder::stream::finalize;
-  auto doc = collection.find_one({key}, sortOpt);
-
-  auto dto = RunLogDto::createShared();
-  if (doc) {
-    auto json = bsoncxx::to_json(doc->view());
-    oatpp::parser::json::mapping::ObjectMapper objMapper;
-    dto = objMapper.readFromString<oatpp::Object<RunLogDto>>(json.c_str());
-  }
-
-  return dto;
-}
-
 oatpp::List<oatpp::Object<RunLogDto>> Database::GetRunList(
-    oatpp::data::mapping::type::String expName, std::string collectionName)
+    oatpp::data::mapping::type::String expName, std::string collectionName,
+    int listSize)
 {
   auto conn = fEliadePool->acquire();
   auto collection = (*conn)["ELIADE"][collectionName];
 
   auto sortOpt = mongocxx::options::find{};
-  // sortOpt.limit(10);
+  sortOpt.limit(listSize);
   auto order = bsoncxx::builder::stream::document{}
                << "start" << -1 << bsoncxx::builder::stream::finalize;
   sortOpt.sort(order.view());
