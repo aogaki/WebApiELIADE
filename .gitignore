@@ -6,3 +6,4 @@ Makefile
 
 eliade-api*
 lib*
+.vscode

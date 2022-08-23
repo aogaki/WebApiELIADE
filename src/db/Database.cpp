@@ -1,4 +1,6 @@
 
+#include "Database.hpp"
+
 #include <bsoncxx/builder/stream/array.hpp>
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/builder/stream/helpers.hpp>
@@ -9,7 +11,6 @@
 #include <mongocxx/exception/operation_exception.hpp>
 #include <mongocxx/options/insert.hpp>
 
-#include "Database.hpp"
 #include "oatpp/core/data/stream/BufferStream.hpp"
 #include "oatpp/parser/json/mapping/ObjectMapper.hpp"
 
