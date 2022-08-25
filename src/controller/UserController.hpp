@@ -136,43 +136,6 @@ class UserController : public oatpp::web::server::api::ApiController
     auto response = createDtoResponse(Status::CODE_200, echo);
     return response;
   }
-
-  ENDPOINT_INFO(enableDump)
-  {
-    info->summary = "Force ASCII dump";
-    info->addConsumes<Object<RunLogDto>>("application/json");
-    info->addResponse<Object<RunLogDto>>(Status::CODE_200, "application/json");
-  }
-  ADD_CORS(enableDump)
-  ENDPOINT("POST", "/ELIADE/EnableDump", enableDump,
-           BODY_DTO(Object<RunLogDto>, dto))
-  {
-    auto echo = m_database->PostUpdateRun(dto, "ServerRunLog");
-    auto response = createDtoResponse(Status::CODE_200, echo);
-    return response;
-  }
-
-  ENDPOINT_INFO(checkDump)
-  {
-    info->summary = "Check ASCII dump or not.  Disable dump after checking.";
-    info->addResponse<String>(Status::CODE_200, "text/plain");
-  }
-  ADD_CORS(checkDump)
-  ENDPOINT("GET", "/ELIADE/CheckDump/{expName}", checkDump,
-           PATH(String, expName))
-  {
-    auto dto = m_database->GetRunList(expName, "ServerRunLog");
-    // std::string message = std::to_string(dto->dump);
-    std::string message = "false";
-    if (dto[0]->dump) {
-      message = "true";
-      dto[0]->dump = false;
-      m_database->PostUpdateRun(dto[0], "ServerRunLog");
-    }
-
-    auto response = createResponse(Status::CODE_200, message.c_str());
-    return response;
-  }
 };
 
 #include OATPP_CODEGEN_END(ApiController)

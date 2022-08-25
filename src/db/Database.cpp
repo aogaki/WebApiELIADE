@@ -66,7 +66,6 @@ oatpp::Object<RunLogDto> Database::PostNewRun(oatpp::Object<RunLogDto> dto,
   auto conn = fEliadePool->acquire();
   auto collection = (*conn)["ELIADE"][collectionName];
   auto result = collection.insert_one(doc.view());
-  dto->id = result->inserted_id().get_oid().value.to_string().c_str();
 
   return dto;
 }
@@ -76,34 +75,16 @@ oatpp::Object<RunLogDto> Database::PostUpdateRun(oatpp::Object<RunLogDto> dto,
 {
   auto conn = fEliadePool->acquire();
   auto collection = (*conn)["ELIADE"][collectionName];
-  try {
-    // Check id
-    auto id = bsoncxx::oid(dto->id->std_str());
-    auto cursor = collection.find(document{} << "_id" << id << finalize);
-    auto nDoc = std::distance(cursor.begin(), cursor.end());
-    if (nDoc != 1) throw bsoncxx::exception();
 
-    // Update the document in DB
-    collection.update_one(
-        document{} << "_id" << id << finalize,
-        document{} << "$set" << open_document << "runNumber" << dto->runNumber
-                   << "start" << dto->start << "stop" << dto->stop << "expName"
-                   << dto->expName->std_str() << "comment"
-                   << dto->comment->std_str() << "dump" << dto->dump
-                   << "dataWriting" << dto->dataWriting << close_document
-                   << finalize);
-  } catch (bsoncxx::exception e) {  // This should be for any cases?
-    // There is no same id in the DB. or multiple(logically this is not happen)
-    // Make new document into DB
-    bsoncxx::builder::stream::document buf{};
-    buf << "runNumber" << dto->runNumber << "start" << dto->start << "stop"
-        << dto->stop << "expName" << dto->expName->std_str() << "comment"
-        << dto->comment->std_str() << "dump" << dto->dump << "dataWriting"
-        << dto->dataWriting;
-    auto result = collection.insert_one(buf.view());
-    dto->id = result->inserted_id().get_oid().value.to_string().c_str();
-    buf.clear();
-  }
+  // Update the document in DB
+  // By using run number, start time, and exp name
+  collection.update_one(
+      document{} << "runNumber" << dto->runNumber << "start" << dto->start
+                 << "expName" << dto->expName->std_str() << finalize,
+      document{} << "$set" << open_document << "runNumber" << dto->runNumber
+                 << "start" << dto->start << "stop" << dto->stop << "expName"
+                 << dto->expName->std_str() << "comment"
+                 << dto->comment->std_str() << close_document << finalize);
 
   return dto;
 }
@@ -123,7 +104,6 @@ oatpp::Object<ExpDto> Database::GetDigiPar()
 
   auto dto = ExpDto::createShared();
   if (doc) {
-    dto->_id = doc->view()["_id"].get_oid().value.to_string().c_str();
     dto->Name = doc->view()["Name"].get_utf8().value.to_string().c_str();
     dto->Time = doc->view()["Time"].get_int64().value;
 

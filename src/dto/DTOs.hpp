@@ -1,4 +1,3 @@
-
 #ifndef example_oatpp_mongo_DTOs_hpp
 #define example_oatpp_mongo_DTOs_hpp
 
@@ -11,14 +10,11 @@ class RunLogDto : public oatpp::DTO
 {
   DTO_INIT(RunLogDto, DTO)
 
-  DTO_FIELD(String, id);
   DTO_FIELD(Int32, runNumber);
   DTO_FIELD(Int64, start);
   DTO_FIELD(Int64, stop);
   DTO_FIELD(String, expName);
   DTO_FIELD(String, comment);
-  DTO_FIELD(Boolean, dump);
-  DTO_FIELD(Boolean, dataWriting);
 };
 
 class DigiParDto : public oatpp::DTO
@@ -89,7 +85,6 @@ class ExpDto : public oatpp::DTO
 {
   DTO_INIT(ExpDto, DTO)
 
-  DTO_FIELD(String, _id);
   DTO_FIELD(String, Name);
   DTO_FIELD(Int64, Time);
   DTO_FIELD(List<Object<DigitizerDto>>, Digitizers) = {};
