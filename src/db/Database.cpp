@@ -83,7 +83,9 @@ oatpp::Object<RunLogDto> Database::PostUpdateRun(oatpp::Object<RunLogDto> dto,
                  << "expName" << dto->expName->std_str() << finalize,
       document{} << "$set" << open_document << "runNumber" << dto->runNumber
                  << "start" << dto->start << "stop" << dto->stop << "expName"
-                 << dto->expName->std_str() << "comment"
+                 << dto->expName->std_str() << "source"
+                 << dto->source->std_str() << "distance"
+                 << dto->distance->std_str() << "comment"
                  << dto->comment->std_str() << close_document << finalize);
 
   return dto;

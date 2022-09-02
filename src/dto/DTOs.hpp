@@ -15,6 +15,8 @@ class RunLogDto : public oatpp::DTO
   DTO_FIELD(Int64, stop);
   DTO_FIELD(String, expName);
   DTO_FIELD(String, comment);
+  DTO_FIELD(String, source);
+  DTO_FIELD(String, distance);
 };
 
 class DigiParDto : public oatpp::DTO
