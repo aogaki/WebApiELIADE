@@ -1,0 +1,13 @@
+[Unit]
+Description=DELILA WEB API daemon
+
+[Service]
+ExecStart=/home/aogaki/DAQ/WebApiELIADE/eliade-api
+Restart=always
+Type=simple
+User=aogaki
+WorkingDirectory=/home/aogaki/DAQ/WebApiELIADE/
+
+[Install]
+WantedBy=multi-user.target
+

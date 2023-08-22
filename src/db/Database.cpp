@@ -19,23 +19,19 @@ using bsoncxx::builder::stream::document;
 using bsoncxx::builder::stream::finalize;
 using bsoncxx::builder::stream::open_document;
 
-namespace db
-{
+namespace db {
 Database::Database()
     : fEliadePool(std::make_shared<mongocxx::pool>(
-          mongocxx::uri("mongodb://127.0.0.1/ELIADE")))
-{
-}
+          mongocxx::uri("mongodb://127.0.0.1/ELIADE"))) {}
 
 oatpp::List<oatpp::Object<RunLogDto>> Database::GetRunList(
     oatpp::data::mapping::type::String expName, std::string collectionName,
-    int listSize)
-{
+    int listSize) {
   auto conn = fEliadePool->acquire();
   auto collection = (*conn)["ELIADE"][collectionName];
 
   auto sortOpt = mongocxx::options::find{};
-  sortOpt.limit(listSize);
+  if (listSize > 0) sortOpt.limit(listSize);
   auto order = bsoncxx::builder::stream::document{}
                << "start" << -1 << bsoncxx::builder::stream::finalize;
   sortOpt.sort(order.view());
@@ -57,8 +53,7 @@ oatpp::List<oatpp::Object<RunLogDto>> Database::GetRunList(
 }
 
 oatpp::Object<RunLogDto> Database::PostNewRun(oatpp::Object<RunLogDto> dto,
-                                              std::string collectionName)
-{
+                                              std::string collectionName) {
   oatpp::parser::json::mapping::ObjectMapper objMapper;
   auto json = objMapper.writeToString(dto);
   auto doc = bsoncxx::from_json(json->std_str());
@@ -71,8 +66,7 @@ oatpp::Object<RunLogDto> Database::PostNewRun(oatpp::Object<RunLogDto> dto,
 }
 
 oatpp::Object<RunLogDto> Database::PostUpdateRun(oatpp::Object<RunLogDto> dto,
-                                                 std::string collectionName)
-{
+                                                 std::string collectionName) {
   auto conn = fEliadePool->acquire();
   auto collection = (*conn)["ELIADE"][collectionName];
 
@@ -91,8 +85,7 @@ oatpp::Object<RunLogDto> Database::PostUpdateRun(oatpp::Object<RunLogDto> dto,
   return dto;
 }
 
-oatpp::Object<ExpDto> Database::GetDigiPar()
-{
+oatpp::Object<ExpDto> Database::GetDigiPar() {
   std::string dbName = "ELIADE";
   auto conn = fEliadePool->acquire();
   auto collection = (*conn)[dbName]["Digitizer"];
